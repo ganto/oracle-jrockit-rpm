@@ -227,6 +227,11 @@ ln -s %{sdkdir} %{jrelnk}
 ln -s %{sdkdir} %{sdklnk}
 popd
 
+pushd $RPM_BUILD_ROOT%{_jvmjardir}
+ln -s %{sdkdir} %{jrelnk}
+ln -s %{sdkdir} %{sdklnk}
+popd
+
 # Generate file lists
 find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type d \
   | sed 's|'$RPM_BUILD_ROOT'|%dir |' >  %{name}-%{version}-all.files
