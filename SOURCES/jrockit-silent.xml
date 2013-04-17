@@ -21,7 +21,7 @@
     Use "false", or "no", to skip this optional component. The default is "false".
     This option is available on all platforms.
 -->
-<data-value name="INSTALL_DEMOS_AND_SAMPLES" value="false" />
+<data-value name="INSTALL_DEMOS_AND_SAMPLES" value="true" />
 
 <!--
     Optional installation of Source Code
@@ -29,7 +29,7 @@
     Use "false", or "no", to skip this optional component. The default is "false".
     This option is available on all platforms.
 -->
-<data-value name="INSTALL_SOURCE_CODE" value="false" />
+<data-value name="INSTALL_SOURCE_CODE" value="true" />
 
 </input-fields>
 </domain-template-descriptor>
