@@ -1,10 +1,3 @@
-#
-# RPM spec file for creating an Oracle JRockit package from the binary
-# installer. It will completely rearrange the SDK to correspond to the
-# Red Hat/Fedora JVM setup.
-#
-################################################################################
-#
 # Copyright (c) 2000-2008, JPackage Project
 # All rights reserved.
 #
@@ -33,6 +26,12 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+################################################################################
+#
+# RPM spec file for creating an Oracle JRockit package from the binary
+# installer. It will completely rearrange the SDK to correspond to the
+# Red Hat/Fedora JVM setup.
 #
 
 %define origin          jrockit
@@ -63,9 +62,11 @@
 # This prevents aggressive stripping.
 %define debug_package %{nil}
 
-# Replace libodbc dependencies, fedora/redhat only provides libodbc(inst).so.n but no libodbc(inst).so
+# Fix dependency generator:
+# - Red Hat/Fedora only provides libodbc(inst).so.2 but no libodbc(inst).so
 %define _use_internal_dependency_generator no
-%global requires_replace /bin/sh -c "%{__find_requires} | %{__sed} -e 's/libodbc.so/libodbc.so.2/;s/libodbcinst.so/libodbcinst.so.2/'"
+%global requires_replace \
+  /bin/sh -c "%{__find_requires} | %{__sed} -e 's/libodbc.so/libodbc.so.2/;s/libodbcinst.so/libodbcinst.so.2/'"
 %global __find_requires %{requires_replace}
 
 
@@ -124,12 +125,20 @@ tools that developers need to compile, debug, and run applets and applications
 written using the Java programming language.
 
 %package        src
-Summary:        Source files for %{name}
+Summary:        Oracle JRockit Source Bundle
 Group:          Development/Languages
 Requires:       %{name} = %{epoch}:%{version}-%{release}
 
 %description    src
-This package contains source files for %{name}.
+This package contains the source files bundle for Oracle JRockit.
+
+%package        demo
+Summary:        JDK Demo projects for %{name}
+Group:          Documentation
+Requires:       %{name}-devel = %{epoch}:%{version}-%{release}
+
+%description    demo
+This package contains demonstration java projects for %{name}.
 
 %package        alsa
 Summary:        ALSA support for Oracle JRockit
@@ -147,6 +156,14 @@ Requires:       %{name} = %{epoch}:%{version}-%{release}
 
 %description    jdbc
 This package contains the JDBC/ODBC driver for Oracle JRockit.
+
+%package        samples
+Summary:        Sample applications for %{name}
+Group:          Documentation
+Requires:       %{name}-devel = %{epoch}:%{version}-%{release}
+
+%description    samples
+This package contains sample code/applications for %{name}
 
 %package        missioncontrol
 Summary:        Oracle JRockit Mission Control
@@ -168,8 +185,7 @@ tools of this type.
 %{__sed} -i -e "s+@@USER_INSTALL_DIR@@+$RPM_BUILD_DIR/%{name}-%{version}+" %{SOURCE1}
 
 # Run the installer
-%{SOURCE0} -mode=silent -silent_xml=%{SOURCE1} >/dev/null
-
+%{SOURCE0} -mode=silent -silent_xml=%{SOURCE1} 2>/dev/null
 
 %build
 # Nope.
@@ -177,6 +193,9 @@ tools of this type.
 
 %install
 rm -rf $RPM_BUILD_ROOT
+
+# fix javac path
+%{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/jmx/jmx-scandir/build.properties
 
 # main files
 install -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
@@ -227,12 +246,11 @@ ln -s %{sdkdir} %{jrelnk}
 ln -s %{sdkdir} %{sdklnk}
 popd
 
-pushd $RPM_BUILD_ROOT%{_jvmjardir}
-ln -s %{sdkdir} %{jrelnk}
-ln -s %{sdkdir} %{sdklnk}
-popd
+# demo/sample
+install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
+cp -a demo sample $RPM_BUILD_ROOT%{_datadir}/%{name}
 
-# Generate file lists
+# generate file lists
 find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type d \
   | sed 's|'$RPM_BUILD_ROOT'|%dir |' >  %{name}-%{version}-all.files
 find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type f -o -type l \
@@ -256,7 +274,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 update-alternatives \
-  --install ${_bindir}/java       java         %{jrebindir}/java %{priority} \
+  --install %{_bindir}/java       java         %{jrebindir}/java %{priority} \
   --slave %{_jvmdir}/jre          jre          %{_jvmdir}/%{jrelnk} \
   --slave %{_jvmjardir}/jre       jre_exports  %{_jvmjardir}/%{jrelnk} \
   --slave %{_bindir}/keytool      keytool      %{jrebindir}/keytool \
@@ -317,14 +335,12 @@ update-alternatives \
   --slave %{_bindir}/jstatd       jstatd       %{sdkbindir}/jstatd
 
 update-alternatives \
-  --install %{_jvmdir}/java-%{origin} java_sdk_%{origin} %{_jvmdir}/%{sdklnk} %{priority}
-
-update-alternatives \
-  --install %{_jvmdir}/java-%{javaver} java_sdk_%{javaver} %{_jvmdir}/%{sdklnk} %{priority}
+  --install %{_jvmdir}/java-%{origin} java_sdk_%{origin} %{_jvmdir}/%{sdklnk} %{priority} \
+  --slave %{_jvmjardir}/java-%{origin} java_sdk_%{origin}_exports %{_jvmjardir}/%{sdklnk}
 
 update-alternatives \
   --install %{_jvmdir}/java-%{javaver} java_sdk_%{javaver} %{_jvmdir}/%{sdklnk} %{priority} \
-  --slave %{_jvmjardir}/java-%{javaver} java_sdk_%{javaver}_exports
+  --slave %{_jvmjardir}/java-%{javaver} java_sdk_%{javaver}_exports %{_jvmjardir}/%{sdklnk}
 
 %postun
 if [ $1 -eq 0 ]; then
@@ -347,6 +363,7 @@ fi
 
 %files -f %{name}-%{version}.files
 %defattr(-,root,root,-)
+%doc THIRDPARTYLICENSEREADME.txt
 %dir %{_jvmdir}/%{sdkdir}
 %{jvmjardir}
 %dir %{_jvmdir}/%{jredir}/lib/security
@@ -367,6 +384,7 @@ fi
 %dir %{_jvmdir}/%{sdkdir}/include
 %dir %{_jvmdir}/%{sdkdir}/lib
 %{_jvmdir}/%{sdkdir}/bin/*
+%exclude %{_jvmdir}/%{sdkdir}/bin/jrmc
 %{_jvmdir}/%{sdkdir}/include/*
 %{_jvmdir}/%{sdkdir}/lib/*
 %{_jvmdir}/%{sdklnk}
@@ -376,15 +394,29 @@ fi
 %defattr(-,root,root,-)
 %{_jvmdir}/%{sdkdir}/src.zip
 
+%files demo
+%defattr(-,root,root,-)
+%doc demo/DEMOS_LICENSE
+%dir %{_datadir}/%{name}
+%{_datadir}/%{name}/demo
+%exclude %{_datadir}/%{name}/demo/DEMOS_LICENSE
+
 %files alsa -f %{name}-%{version}-alsa.files
 %defattr(-,root,root,-)
 
 %files jdbc -f %{name}-%{version}-jdbc.files
 %defattr(-,root,root,-)
 
+%files samples
+%defattr(-,root,root,-)
+%doc sample/SAMPLES_LICENSE
+%dir %{_datadir}/%{name}
+%{_datadir}/%{name}/sample
+%exclude %{_datadir}/%{name}/sample/SAMPLES_LICENSE
 
 %files missioncontrol
 %defattr(-,root,root,-)
 %doc missioncontrol/THIRDPARTYLICENSEREADME.txt
-%dir %{_jvmdir}/%{sdkdir}/missioncontrol
-%{_jvmdir}/%{sdkdir}/missioncontrol/*
+%{_jvmdir}/%{sdkdir}/bin/jrmc
+%{_jvmdir}/%{sdkdir}/missioncontrol
+%exclude %{_jvmdir}/%{sdkdir}/missioncontrol/THIRDPARTYLICENSEREADME.txt
