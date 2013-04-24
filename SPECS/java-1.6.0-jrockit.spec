@@ -66,7 +66,7 @@
 
 # Fix dependency generator:
 # - Red Hat/Fedora only provides libodbc(inst).so.2 but no libodbc(inst).so
-%define _use_internal_dependency_generator no
+%define _use_internal_dependency_generator 0
 %global requires_replace \
   /bin/sh -c "%{__find_requires} | %{__sed} -e 's/libodbc.so/libodbc.so.2/;s/libodbcinst.so/libodbcinst.so.2/'"
 %global __find_requires %{requires_replace}
@@ -128,12 +128,12 @@ tools that developers need to compile, debug, and run applets and applications
 written using the Java programming language.
 
 %package        src
-Summary:        Oracle JRockit Source Bundle
+Summary:        Source files for Oracle JRockit
 Group:          Development/Languages
 Requires:       %{name} = %{epoch}:%{version}-%{release}
 
 %description    src
-This package contains the source files bundle for Oracle JRockit.
+This package contains the source code for the Oracle JRockit class libraries.
 
 %package        demo
 Summary:        Java demo applications and sample code
@@ -187,12 +187,12 @@ tools of this type.
 %{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/webservices/EbayServer/build.properties
 
 # main files
-install -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
+%{__install} -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
 %{__cp} -a bin include lib missioncontrol src.zip $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
-install -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}
+%{__install} -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}
 
 # extensions handling
-install -d -m 755 $RPM_BUILD_ROOT%{jvmjardir}
+%{__install} -d -m 755 $RPM_BUILD_ROOT%{jvmjardir}
 pushd $RPM_BUILD_ROOT%{jvmjardir}
   %{__ln_s} %{_jvmdir}/%{jredir}/lib/jsse.jar jsse-%{version}.jar
   %{__ln_s} %{_jvmdir}/%{jredir}/lib/jce.jar jce-%{version}.jar
@@ -216,7 +216,7 @@ popd
 %{__cp} -a jre/bin jre/lib $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}
 
 # jce policy file handling
-install -d -m 755 $RPM_BUILD_ROOT%{_jvmprivdir}/%{name}.%{_arch}/jce/vanilla
+%{__install} -d -m 755 $RPM_BUILD_ROOT%{_jvmprivdir}/%{name}.%{_arch}/jce/vanilla
 for file in local_policy.jar US_export_policy.jar; do
   %{__mv} $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}/lib/security/$file \
     $RPM_BUILD_ROOT%{_jvmprivdir}/%{archdir}/jce/vanilla
@@ -236,14 +236,16 @@ pushd $RPM_BUILD_ROOT%{_jvmjardir}
 popd
 
 # demo/sample
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
+%{__install} -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
 %{__cp} -a demo sample $RPM_BUILD_ROOT%{_datadir}/%{name}
 
 # font handling
+
+
 # generate file lists
-find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type d \
+%{_bindir}/find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type d \
   | %{__sed} 's|'$RPM_BUILD_ROOT'|%dir |' >  %{name}-%{version}-all.files
-find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type f -o -type l \
+%{_bindir}/find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type f -o -type l \
   | %{__sed} 's|'$RPM_BUILD_ROOT'||'      >> %{name}-%{version}-all.files
 
 %{__grep} Jdbc    %{name}-%{version}-all.files | sort \
@@ -311,7 +313,7 @@ update-alternatives \
   --slave %{_bindir}/javah        javah        %{sdkbindir}/javah \
   --slave %{_bindir}/javap        javap        %{sdkbindir}/javap \
   --slave %{_bindir}/jconsole     jconsole     %{sdkbindir}/jconsole \
-  --slave %{_bindir}/jdb          jdb          %{sdkbindir}/jdb	 \
+  --slave %{_bindir}/jdb          jdb          %{sdkbindir}/jdb \
   --slave %{_bindir}/jhat         jhat         %{sdkbindir}/jhat \
   --slave %{_bindir}/jps          jps          %{sdkbindir}/jps \
   --slave %{_bindir}/jrunscript   jrunscript   %{sdkbindir}/jrunscript \
