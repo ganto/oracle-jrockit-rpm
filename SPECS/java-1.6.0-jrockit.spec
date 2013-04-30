@@ -42,9 +42,9 @@
 
 %define priority        %(%{__sed} 's+\\.++g' <<< "%{javaver}%{buildver}")
 
-%define sdklnk          java-%{javaver}-%{origin}
-%define jrelnk          jre-%{javaver}-%{origin}
-%define sdkdir          %{name}-%{version}
+%define sdklnk          java-%{javaver}-%{origin}.%{_arch}
+%define jrelnk          jre-%{javaver}-%{origin}.%{_arch}
+%define sdkdir          %{name}-%{version}.%{_arch}
 %define jredir          %{sdkdir}/jre
 %define sdkbindir       %{_jvmdir}/%{sdklnk}/bin
 %define jrebindir       %{_jvmdir}/%{jrelnk}/bin
@@ -72,10 +72,10 @@
 
 Name:           java-%{javaver}-%{origin}
 Version:        %{javaver}.%{buildver}_R%{jrockitver}_%{mcver}
-Release:        1%{?dist}
+Release:        2%{?dist}
 Epoch:          1
 Summary:        Oracle JRockit Java Runtime Environment
-License:        BCL, ASL 1.1, ASL 2.0, Public Domain, W3C, XFree86copyright
+License:        BCL, ASL 1.1, ASL 2.0, Microsoft EULA, Public Domain, W3C, XFree86copyright
 Group:          Development/Languages
 URL:            http://www.oracle.com/technetwork/middleware/jrockit
 Source0:        %{origin}-jdk%{javaver}_%{buildver}-R%{jrockitver}-%{mcver}-linux-%{target_cpu}.bin
@@ -133,12 +133,12 @@ Requires:       %{name} = %{epoch}:%{version}-%{release}
 This package contains the source files bundle for Oracle JRockit.
 
 %package        demo
-Summary:        JDK Demo projects for %{name}
-Group:          Documentation
+Summary:        Java demo applications and sample code
+Group:          Development/Languages
 Requires:       %{name}-devel = %{epoch}:%{version}-%{release}
 
 %description    demo
-This package contains demonstration java projects for %{name}.
+This package contains the Oracle JRockit demo applications and sample code.
 
 %package        jdbc
 Summary:        JDBC/ODBC driver for Oracle JRockit
@@ -147,14 +147,6 @@ Requires:       %{name} = %{epoch}:%{version}-%{release}
 
 %description    jdbc
 This package contains the JDBC/ODBC driver for Oracle JRockit.
-
-%package        samples
-Summary:        Sample applications for %{name}
-Group:          Documentation
-Requires:       %{name}-devel = %{epoch}:%{version}-%{release}
-
-%description    samples
-This package contains sample code/applications for %{name}
 
 %package        missioncontrol
 Summary:        Oracle JRockit Mission Control
@@ -187,6 +179,8 @@ rm -rf $RPM_BUILD_ROOT
 
 # fix javac path
 %{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/jmx/jmx-scandir/build.properties
+%{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/webservices/EbayClient/build.properties
+%{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/webservices/EbayServer/build.properties
 
 # main files
 install -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
@@ -385,19 +379,15 @@ fi
 %files demo
 %defattr(-,root,root,-)
 %doc demo/DEMOS_LICENSE
+%doc sample/SAMPLES_LICENSE
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/demo
+%{_datadir}/%{name}/sample
 %exclude %{_datadir}/%{name}/demo/DEMOS_LICENSE
+%exclude %{_datadir}/%{name}/sample/SAMPLES_LICENSE
 
 %files jdbc -f %{name}-%{version}-jdbc.files
 %defattr(-,root,root,-)
-
-%files samples
-%defattr(-,root,root,-)
-%doc sample/SAMPLES_LICENSE
-%dir %{_datadir}/%{name}
-%{_datadir}/%{name}/sample
-%exclude %{_datadir}/%{name}/sample/SAMPLES_LICENSE
 
 %files missioncontrol
 %defattr(-,root,root,-)
