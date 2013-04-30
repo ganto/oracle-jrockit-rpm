@@ -140,15 +140,6 @@ Requires:       %{name}-devel = %{epoch}:%{version}-%{release}
 %description    demo
 This package contains demonstration java projects for %{name}.
 
-%package        alsa
-Summary:        ALSA support for Oracle JRockit
-Group:          Development/Libraries
-Requires:       %{name} = %{epoch}:%{version}-%{release}
-
-%description    alsa
-This package contains the Advanced Linux Sound Architecture (ALSA) support
-library for Oracle JRockit.
-
 %package        jdbc
 Summary:        JDBC/ODBC driver for Oracle JRockit
 Group:          Development/Libraries
@@ -258,13 +249,10 @@ find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type f -o -type l \
 
 grep Jdbc    %{name}-%{version}-all.files | sort \
   > %{name}-%{version}-jdbc.files
-grep -F alsa.so %{name}-%{version}-all.files | sort \
-  > %{name}-%{version}-alsa.files
-cat %{name}-%{version}-all.files \
-  | grep -v missioncontrol \
-  | grep -v Jdbc \
-  | grep -vF alsa.so \
-  | grep -v jre/lib/security \
+%{__cat} %{name}-%{version}-all.files \
+  | %{__grep} -v missioncontrol \
+  | %{__grep} -v Jdbc \
+  | %{__grep} -v jre/lib/security \
   > %{name}-%{version}.files
 
 
@@ -400,9 +388,6 @@ fi
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/demo
 %exclude %{_datadir}/%{name}/demo/DEMOS_LICENSE
-
-%files alsa -f %{name}-%{version}-alsa.files
-%defattr(-,root,root,-)
 
 %files jdbc -f %{name}-%{version}-jdbc.files
 %defattr(-,root,root,-)
