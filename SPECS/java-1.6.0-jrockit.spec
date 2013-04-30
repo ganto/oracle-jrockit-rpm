@@ -153,7 +153,7 @@ Requires:       %{name} = %{epoch}:%{version}-%{release}
 This package contains the JDBC/ODBC driver for Oracle JRockit.
 
 %package        missioncontrol
-Summary:        Oracle JRockit Mission Control
+Summary:        Oracle JRockit Mission Control tools and Eclipse plugin
 Group:          Development/Debuggers
 Requires:       %{name} = %{epoch}:%{version}-%{release}
 
@@ -185,6 +185,15 @@ tools of this type.
 %{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/jmx/jmx-scandir/build.properties
 %{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/webservices/EbayClient/build.properties
 %{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/webservices/EbayServer/build.properties
+
+# multilib-capable docs
+%{__install} -d -m 755 $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}.%{_arch}
+%{__mv} THIRDPARTYLICENSEREADME.txt \
+  $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}.%{_arch}
+%{__install} -d -m 755 \
+  $RPM_BUILD_ROOT%{_docdir}/%{name}-missioncontrol-%{version}.%{_arch}
+%{__mv} missioncontrol/THIRDPARTYLICENSEREADME.txt \
+  $RPM_BUILD_ROOT%{_docdir}/%{name}-missioncontrol-%{version}.%{_arch}
 
 # main files
 %{__install} -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
@@ -238,9 +247,6 @@ popd
 # demo/sample
 %{__install} -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
 %{__cp} -a demo sample $RPM_BUILD_ROOT%{_datadir}/%{name}
-
-# font handling
-
 
 # generate file lists
 %{_bindir}/find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type d \
@@ -358,7 +364,7 @@ fi
 
 %files -f %{name}-%{version}.files
 %defattr(-,root,root,-)
-%doc THIRDPARTYLICENSEREADME.txt
+%doc %{_docdir}/%{name}-%{version}.%{_arch}/THIRDPARTYLICENSEREADME.txt
 %dir %{_jvmdir}/%{sdkdir}
 %{jvmjardir}
 %dir %{_jvmdir}/%{jredir}/lib/security
@@ -374,7 +380,6 @@ fi
 
 %files devel
 %defattr(-,root,root,-)
-%doc THIRDPARTYLICENSEREADME.txt
 %dir %{_jvmdir}/%{sdkdir}/bin
 %dir %{_jvmdir}/%{sdkdir}/include
 %dir %{_jvmdir}/%{sdkdir}/lib
@@ -404,7 +409,11 @@ fi
 
 %files missioncontrol
 %defattr(-,root,root,-)
-%doc missioncontrol/THIRDPARTYLICENSEREADME.txt
+%doc %{_docdir}/%{name}-missioncontrol-%{version}.%{_arch}/THIRDPARTYLICENSEREADME.txt
 %{_jvmdir}/%{sdkdir}/bin/jrmc
 %{_jvmdir}/%{sdkdir}/missioncontrol
-%exclude %{_jvmdir}/%{sdkdir}/missioncontrol/THIRDPARTYLICENSEREADME.txt
+
+
+%changelog
+* Tue Apr 30 2013 Reto Gantenbein <reto.gantenbein@linuxmonk.ch> 1.6.0.37_R28.2.5_4.1.0-1
+- Initial packaging, heavily based on the java-1.6.0-sun.spec file
