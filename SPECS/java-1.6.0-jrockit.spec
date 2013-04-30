@@ -1,4 +1,4 @@
-# Copyright (c) 2000-2008, JPackage Project
+# Copyright (c) 2000-2009, JPackage Project
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,9 @@
 %define jredir          %{sdkdir}/jre
 %define sdkbindir       %{_jvmdir}/%{sdklnk}/bin
 %define jrebindir       %{_jvmdir}/%{jrelnk}/bin
-%define jvmjardir       %{_jvmjardir}/%{name}-%{version}
+%define jvmjardir       %{_jvmjardir}/%{name}-%{version}.%{_arch}
+
+%define archdir          %{name}.%{_arch}
 
 %ifarch %ix86
 %define target_cpu      ia32
@@ -72,7 +74,7 @@
 
 Name:           java-%{javaver}-%{origin}
 Version:        %{javaver}.%{buildver}_R%{jrockitver}_%{mcver}
-Release:        2%{?dist}
+Release:        1%{?dist}
 Epoch:          1
 Summary:        Oracle JRockit Java Runtime Environment
 License:        BCL, ASL 1.1, ASL 2.0, Microsoft EULA, Public Domain, W3C, XFree86copyright
@@ -89,9 +91,9 @@ Requires(post):   /usr/sbin/update-alternatives
 Requires(postun): /usr/sbin/update-alternatives
 Requires:       jpackage-utils >= 0:1.5.38
 Conflicts:      kaffe
-ExclusiveArch:  i586 x86_64
+ExclusiveArch:  i686 x86_64
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-BuildRequires:  jpackage-utils >= 0:1.5.38, sed
+BuildRequires:  findutils, jpackage-utils >= 0:1.5.38, sed
 Provides:       jndi = %{epoch}:%{version}, jndi-ldap = %{epoch}:%{version}
 Provides:       jndi-cos = %{epoch}:%{version}, jndi-rmi = %{epoch}:%{version}
 Provides:       jndi-dns = %{epoch}:%{version}
@@ -99,6 +101,7 @@ Provides:       jaas = %{epoch}:%{version}
 Provides:       jsse = %{epoch}:%{version}
 Provides:       jce = %{epoch}:%{version}
 Provides:       jdbc-stdext = %{epoch}:3.0, jdbc-stdext = %{epoch}:%{version}
+Provides:       java-fonts = %{epoch}:%{version}, java-%{javaver}-fonts
 Provides:       java-sasl = %{epoch}:%{version}
 
 %description
@@ -135,6 +138,7 @@ This package contains the source files bundle for Oracle JRockit.
 %package        demo
 Summary:        Java demo applications and sample code
 Group:          Development/Languages
+BuildArch:      noarch
 Requires:       %{name}-devel = %{epoch}:%{version}-%{release}
 
 %description    demo
@@ -175,7 +179,7 @@ tools of this type.
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
+%{__rm} -rf $RPM_BUILD_ROOT
 
 # fix javac path
 %{__sed} -i -e "s|^nbjdk.home=.*$|nbjdk.home=%{_jvmdir}/%{sdkdir}|g" sample/jmx/jmx-scandir/build.properties
@@ -184,64 +188,65 @@ rm -rf $RPM_BUILD_ROOT
 
 # main files
 install -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
-cp -a bin include lib missioncontrol src.zip $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
+%{__cp} -a bin include lib missioncontrol src.zip $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir}
 install -d -m 755 $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}
 
 # extensions handling
 install -d -m 755 $RPM_BUILD_ROOT%{jvmjardir}
 pushd $RPM_BUILD_ROOT%{jvmjardir}
-   ln -s %{_jvmdir}/%{jredir}/lib/jsse.jar jsse-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/jce.jar jce-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar jndi-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar jndi-ldap-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar jndi-cos-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar jndi-rmi-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar jaas-%{version}.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar jdbc-stdext-%{version}.jar
-   ln -s jdbc-stdext-%{version}.jar jdbc-stdext-3.0.jar
-   ln -s %{_jvmdir}/%{jredir}/lib/rt.jar sasl-%{version}.jar
-   for jar in *-%{version}.jar ; do
-      if [ x%{version} != x%{javaver} ]; then
-         ln -fs ${jar} $(echo $jar | sed "s|-%{version}.jar|-%{javaver}.jar|g")
-      fi
-      ln -fs ${jar} $(echo $jar | sed "s|-%{version}.jar|.jar|g")
-   done
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/jsse.jar jsse-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/jce.jar jce-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar jndi-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar jndi-ldap-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar jndi-cos-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar jndi-rmi-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar jaas-%{version}.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar jdbc-stdext-%{version}.jar
+  %{__ln_s} jdbc-stdext-%{version}.jar jdbc-stdext-3.0.jar
+  %{__ln_s} %{_jvmdir}/%{jredir}/lib/rt.jar sasl-%{version}.jar
+  for jar in *-%{version}.jar ; do
+    if [ x%{version} != x%{javaver} ]; then
+      ln -fs ${jar} $(echo $jar | %{__sed} "s|-%{version}.jar|-%{javaver}.jar|g")
+    fi
+    ln -fs ${jar} $(echo $jar | %{__sed} "s|-%{version}.jar|.jar|g")
+  done
 popd
 
 # rest of the jre
-cp -a jre/bin jre/lib $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}
+%{__cp} -a jre/bin jre/lib $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}
 
 # jce policy file handling
-install -d -m 755 $RPM_BUILD_ROOT%{_jvmprivdir}/%{name}/jce/vanilla
+install -d -m 755 $RPM_BUILD_ROOT%{_jvmprivdir}/%{name}.%{_arch}/jce/vanilla
 for file in local_policy.jar US_export_policy.jar; do
-  mv $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}/lib/security/$file \
-    $RPM_BUILD_ROOT%{_jvmprivdir}/%{name}/jce/vanilla
+  %{__mv} $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}/lib/security/$file \
+    $RPM_BUILD_ROOT%{_jvmprivdir}/%{archdir}/jce/vanilla
   # for ghosts
   touch $RPM_BUILD_ROOT%{_jvmdir}/%{jredir}/lib/security/$file
 done
 
 # versionless symlinks
 pushd $RPM_BUILD_ROOT%{_jvmdir}
-ln -s %{jredir} %{jrelnk}
-ln -s %{sdkdir} %{sdklnk}
+  %{__ln_s} %{jredir} %{jrelnk}
+  %{__ln_s} %{sdkdir} %{sdklnk}
 popd
 
 pushd $RPM_BUILD_ROOT%{_jvmjardir}
-ln -s %{sdkdir} %{jrelnk}
-ln -s %{sdkdir} %{sdklnk}
+  %{__ln_s} %{sdkdir} %{jrelnk}
+  %{__ln_s} %{sdkdir} %{sdklnk}
 popd
 
 # demo/sample
 install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
-cp -a demo sample $RPM_BUILD_ROOT%{_datadir}/%{name}
+%{__cp} -a demo sample $RPM_BUILD_ROOT%{_datadir}/%{name}
 
+# font handling
 # generate file lists
 find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type d \
-  | sed 's|'$RPM_BUILD_ROOT'|%dir |' >  %{name}-%{version}-all.files
+  | %{__sed} 's|'$RPM_BUILD_ROOT'|%dir |' >  %{name}-%{version}-all.files
 find $RPM_BUILD_ROOT%{_jvmdir}/%{jredir} -type f -o -type l \
-  | sed 's|'$RPM_BUILD_ROOT'||'      >> %{name}-%{version}-all.files
+  | %{__sed} 's|'$RPM_BUILD_ROOT'||'      >> %{name}-%{version}-all.files
 
-grep Jdbc    %{name}-%{version}-all.files | sort \
+%{__grep} Jdbc    %{name}-%{version}-all.files | sort \
   > %{name}-%{version}-jdbc.files
 %{__cat} %{name}-%{version}-all.files \
   | %{__grep} -v missioncontrol \
@@ -251,7 +256,7 @@ grep Jdbc    %{name}-%{version}-all.files | sort \
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+%{__rm} -rf $RPM_BUILD_ROOT
 
 
 %post
@@ -277,19 +282,19 @@ update-alternatives \
 if [ -d %{_jvmdir}/%{jrelnk}/lib/security ]; then
   # Need to remove the old jars in order to support upgrading, ugly :(
   # update-alternatives fails silently if the link targets exist as files.
-  rm -f %{_jvmdir}/%{jrelnk}/lib/security/{local,US_export}_policy.jar
+  %{__rm} -f %{_jvmdir}/%{jrelnk}/lib/security/{local,US_export}_policy.jar
 fi
 
 update-alternatives \
   --install \
     %{_jvmdir}/%{jrelnk}/lib/security/local_policy.jar \
     jce_%{javaver}_%{origin}_local_policy \
-    %{_jvmprivdir}/%{name}/jce/vanilla/local_policy.jar \
+    %{_jvmprivdir}/%{archdir}/jce/vanilla/local_policy.jar \
     %{priority} \
   --slave \
     %{_jvmdir}/%{jrelnk}/lib/security/US_export_policy.jar \
     jce_%{javaver}_%{origin}_us_export_policy \
-    %{_jvmprivdir}/%{name}/jce/vanilla/US_export_policy.jar
+    %{_jvmprivdir}/%{archdir}/jce/vanilla/US_export_policy.jar
 
 %post devel
 update-alternatives \
@@ -297,6 +302,7 @@ update-alternatives \
   --slave %{_jvmdir}/java         java_sdk     %{_jvmdir}/%{sdklnk} \
   --slave %{_jvmjardir}/java      java_sdk_exports %{_jvmjardir}/%{sdklnk} \
   --slave %{_bindir}/appletviewer appletviewer %{sdkbindir}/appletviewer \
+  --slave %{_bindir}/apt          apt          %{sdkbindir}/apt \
   --slave %{_bindir}/extcheck     extcheck     %{sdkbindir}/extcheck \
   --slave %{_bindir}/idlj         idlj         %{sdkbindir}/idlj \
   --slave %{_bindir}/jar          jar          %{sdkbindir}/jar \
@@ -304,17 +310,22 @@ update-alternatives \
   --slave %{_bindir}/javadoc      javadoc      %{sdkbindir}/javadoc \
   --slave %{_bindir}/javah        javah        %{sdkbindir}/javah \
   --slave %{_bindir}/javap        javap        %{sdkbindir}/javap \
-  --slave %{_bindir}/jdb          jdb          %{sdkbindir}/jdb \
+  --slave %{_bindir}/jconsole     jconsole     %{sdkbindir}/jconsole \
+  --slave %{_bindir}/jdb          jdb          %{sdkbindir}/jdb	 \
+  --slave %{_bindir}/jhat         jhat         %{sdkbindir}/jhat \
+  --slave %{_bindir}/jps          jps          %{sdkbindir}/jps \
+  --slave %{_bindir}/jrunscript   jrunscript   %{sdkbindir}/jrunscript \
+  --slave %{_bindir}/jstat        jstat        %{sdkbindir}/jstat \
+  --slave %{_bindir}/jstatd       jstatd       %{sdkbindir}/jstatd \
   --slave %{_bindir}/native2ascii native2ascii %{sdkbindir}/native2ascii \
   --slave %{_bindir}/rmic         rmic         %{sdkbindir}/rmic \
+  --slave %{_bindir}/schemagen    schemagen    %{sdkbindir}/schemagen \
   --slave %{_bindir}/serialver    serialver    %{sdkbindir}/serialver \
-  --slave %{_bindir}/jconsole     jconsole     %{sdkbindir}/jconsole \
   --slave %{_bindir}/pack200      pack200      %{sdkbindir}/pack200 \
   --slave %{_bindir}/unpack200    unpack200    %{sdkbindir}/unpack200 \
-  --slave %{_bindir}/apt          apt          %{sdkbindir}/apt \
-  --slave %{_bindir}/jps          jps          %{sdkbindir}/jps \
-  --slave %{_bindir}/jstat        jstat        %{sdkbindir}/jstat \
-  --slave %{_bindir}/jstatd       jstatd       %{sdkbindir}/jstatd
+  --slave %{_bindir}/wsgen        wsgen        %{sdkbindir}/wsgen \
+  --slave %{_bindir}/wsimport     wsimport     %{sdkbindir}/wsimport \
+  --slave %{_bindir}/xjc          xjc          %{sdkbindir}/xjc
 
 update-alternatives \
   --install %{_jvmdir}/java-%{origin} java_sdk_%{origin} %{_jvmdir}/%{sdklnk} %{priority} \
@@ -329,7 +340,7 @@ if [ $1 -eq 0 ]; then
   update-alternatives --remove java %{jrebindir}/java
   update-alternatives --remove \
     jce_%{javaver}_%{origin}_local_policy \
-    %{_jvmprivdir}/%{name}/jce/vanilla/local_policy.jar
+    %{_jvmprivdir}/%{archdir}/jce/vanilla/local_policy.jar
   update-alternatives --remove jre_%{origin}  %{_jvmdir}/%{jrelnk}
   update-alternatives --remove jre_%{javaver} %{_jvmdir}/%{jrelnk}
 fi
